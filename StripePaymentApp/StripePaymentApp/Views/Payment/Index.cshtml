@@ -1,0 +1,129 @@
+﻿@{
+    ViewData["Title"] = "Stripe Payment";
+}
+<script src="https://js.stripe.com/v3/"></script>
+
+<style>
+    form {
+        max-width: 400px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    input[type="number"] {
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+    }
+
+    #card-element {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: #f9f9f9;
+    }
+
+    #submit {
+        background-color: #5469d4;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    #submit:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    #payment-result {
+        font-weight: bold;
+        text-align: center;
+    }
+</style>
+
+<h2 style="text-align: center;">💳 Stripe Payment</h2>
+
+<form id="payment-form">
+    <input type="number" id="amount-input" placeholder="Enter Amount (USD)" min="1" required />
+    <div id="card-element"><!-- Stripe injects here --></div>
+    <button id="submit">Pay</button>
+    <p id="payment-result"></p>
+</form>
+
+<script>
+    const stripe = Stripe("@ViewBag.PublishableKey");
+
+    const form = document.getElementById("payment-form");
+    const amountInput = document.getElementById("amount-input");
+    const resultDiv = document.getElementById("payment-result");
+    const submitBtn = document.getElementById("submit");
+
+    let card;
+
+    // Initialize Stripe Elements
+    const elements = stripe.elements();
+    card = elements.create("card", {
+        style: {
+            base: {
+                color: "#32325d",
+                fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+                fontSmoothing: "antialiased",
+                fontSize: "16px",
+                "::placeholder": {
+                    color: "#a0aec0"
+                }
+            },
+            invalid: {
+                color: "#fa755a",
+                iconColor: "#fa755a"
+            }
+        }
+    });
+    card.mount("#card-element");
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        resultDiv.textContent = "Processing...";
+
+        const amountValue = parseFloat(amountInput.value);
+        if (isNaN(amountValue) || amountValue < 1) {
+            resultDiv.textContent = "Please enter a valid amount (minimum $1)";
+            resultDiv.style.color = "red";
+            submitBtn.disabled = false;
+            return;
+        }
+
+        // Convert dollars to cents
+        const amountInCents = Math.round(amountValue * 100);
+
+        // Create payment intent
+        const response = await fetch("/Payment/CreatePaymentIntent", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amount: amountInCents, currency: "usd" })
+        });
+
+        const data = await response.json();
+
+        const { paymentIntent, error } = await stripe.confirmCardPayment(data.clientSecret, {
+            payment_method: {
+                card: card
+            }
+        });
+
+        if (error) {
+            resultDiv.textContent = "❌ " + error.message;
+            resultDiv.style.color = "red";
+            submitBtn.disabled = false;
+        } else if (paymentIntent && paymentIntent.status === "succeeded") {
+            window.location.href = "/Payment/Success";
+        }
+    });
+</script>
