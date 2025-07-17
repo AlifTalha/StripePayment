@@ -1,0 +1,13 @@
+Stripe payment Method:  use officework115562@gmail.com    this gmail
+
+
+https://dashboard.stripe.com/test/payments
+
+https://dashboard.stripe.com/test/dashboard
+
+Publishable key:
+pk_test_51RlsFuRwLyuKgv6HkEVj9DilfpcKrUzxofwD9HlT7RaGBbJFPg0nj8IYpVYIxXG6Zib88lRfk3nvKR8dMjNq8SbU00B3Rjrifp
+
+
+Secret key:
+sk_test_51RlsFuRwLyuKgv6HB0huG7N1qhMj9WUpV3Gm8DMvCOczJynmBdA4fpT635To7wYyoPSkM363O86QOZZwPqhBUII800HiLKXvB1
